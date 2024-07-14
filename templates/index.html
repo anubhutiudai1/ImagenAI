@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Generator Interface</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        body {
+            font-family: 'Roboto', sans-serif;
+            background-color: #f0f0f0;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: #4285f4; /* Google blue */
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        form {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        label {
+            font-size: 1.2rem;
+            color: #555;
+            flex: 1;
+            text-align: right;
+            margin-right: 10px;
+        }
+
+        input[type="text"] {
+            flex: 3;
+            width: calc(100% - 24px);
+            padding: 10px;
+            font-size: 1rem;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-top: 10px;
+            margin-bottom: 20px;
+            box-sizing: border-box;
+        }
+
+        input[type="text"]::placeholder {
+            color: #bbb; /* Placeholder text color */
+            font-style: italic; /* Placeholder text style */
+        }
+
+        button {
+            background-color: #4285f4; /* Google blue */
+            color: #fff;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1 rem;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+            flex: 0.5;
+            margin-top: 10px;
+            margin-bottom: 20px;
+        }
+
+        button:hover {
+            background-color: #3367d6; /* Darker shade of Google blue */
+        }
+
+        .loader {
+            border: 4px solid #f3f3f3; /* Light grey */
+            border-top: 4px solid #4285f4; /* Google blue */
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+            margin-top: 20px;
+            display: none; /* Hidden by default */
+        }
+
+        .images {
+            margin-top: 20px;
+            text-align: center;
+        }
+
+        img {
+            max-width: 512px;
+            height: auto;
+            border-radius: 4px;
+            margin-top: 10px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Image Generator AI</h1>
+        <form id="imageForm">
+            <!--<label for="description">Enter a description:</label>-->
+            <input type="text" id="description" name="description" placeholder="Enter a description..." required>
+            <button type="button" onclick="generateImages()">Generate</button>
+        </form>
+
+        <div id="loader" class="loader"></div>
+
+        <div class="images" id="imageContainer">
+            <!-- Images will be dynamically added here -->
+        </div>
+    </div>
+
+    <script>
+        function generateImages() {
+            // Show loader
+            var loader = document.getElementById("loader");
+            loader.style.display = "block";
+    
+            // Get description input value
+            var description = document.getElementById("description").value;
+    
+            // Construct payload data
+            var data = {
+                description: description
+            };
+    
+            // Fetch POST request to Flask route
+            fetch("/generate", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify(data)
+            })
+            .then(response => response.json())
+            .then(data => {
+                // Hide loader
+                loader.style.display = "none";
+    
+                // Handle response (data should contain image_url)
+                if (data.error) {
+                    alert("Error: " + data.error);
+                } else {
+                    displayImages(data);
+                }
+            })
+            .catch(error => {
+                // Hide loader on error
+                loader.style.display = "none";
+    
+                console.error("Error:", error);
+                alert("Error: Unable to generate images: Could be a Policy Violation!");
+            });
+        }
+    
+        function displayImages(imageUrl) {
+            // Clear previous images
+            var imageContainer = document.getElementById("imageContainer");
+            imageContainer.innerHTML = ''; // Remove all child elements
+    
+            // Create image element
+            var imgElement = document.createElement("img");
+            imgElement.src = imageUrl + '?' + new Date().getTime();
+            imgElement.alt = "Generated Image";
+    
+            // Append image to container
+            imageContainer.appendChild(imgElement);
+        }
+    </script>
+</body>
+</html>
